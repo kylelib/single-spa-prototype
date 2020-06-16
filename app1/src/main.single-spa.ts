@@ -18,7 +18,7 @@ const lifecycles = singleSpaAngular({
     singleSpaPropsSubject.next(singleSpaProps);
     return platformBrowserDynamic(getSingleSpaExtraProviders()).bootstrapModule(AppModule);
   },
-  template: '<dashboard-root />',
+  template: '<app1-root />',
   Router,
   NgZone: NgZone,
 });

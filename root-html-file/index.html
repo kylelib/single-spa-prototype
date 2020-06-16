@@ -58,9 +58,10 @@
       single-spa-layout way in this prototype. It's important that th name specified in each application element match the name
       of the micro-frontend. Microfrontends are treated as modules/components, not as independent applications.
 
-      @Kyle Libbert -6/16/20
+      @Kyle Libbert - 6/16/20
     -->
     <template id="single-spa-layout">
+      <!-- This is essentially the router-outlet where our micro frontends will get injected when routing to them -kyle -->
       <single-spa-router>
         <nav class="topnav">
           <application name="dashboard"></application>
@@ -108,7 +109,8 @@
         // Added this to experiment with navigating directly to one of the micro-frontends on startup. This helps prove that we could
         // potentially create an additinal Dashboard micro-frontend with the desires we need at LHI to navigat to the various applications.
         // Every Single-Spa (Luigi as well) uses a side or top nav in their examples. -- Kyle
-        singleSpa.navigateToUrl("/app1");
+
+        // singleSpa.navigateToUrl("/app1");
       });
     </script>
 
