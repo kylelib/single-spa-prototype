@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+    This is the top level of the Single-Spa application. It is the master controller. You'll see this referred to as the single-spa root config 
+    or root-html-file. This single-spa config file is where your applications are initialized, and an HTML page will request this config.
+
+    We want to keep this single-spa config as small as possible since it is the master controller and could easily become a maintenance bottleneck. 
+    We don’t want to be constantly changing both the single-spa config and the child applications.
+
+    @Kyle Libbert -6/16/20
+-->
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src *  data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * data: blob: 'unsafe-inline'; font-src * data: blob: 'unsafe-inline';">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Your application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="importmap-type" content="systemjs-importmap">
+
+    <!-- 
+      Single-Spa recommends use of import maps for browser-side module support. The script tag below uses the systemJS polyfill for that support.
+      Every microfrontend you want to host here should be listed in the systemjs import maps below.
+
+      NOTE: The best way to use Single-Spa is via import maps. Currently Chrome is the only browser that has support for this, but it is 
+      experimental and must be turned on via a feature flag. Therefore we'll employ a polyfills to provide import maps support for Chrome and 
+      other browser. SystemJs is the most popular and widely used. 
+
+      @Kyle Libbert -6/16/20
+    -->
+    <script type="systemjs-importmap">
+      {
+        "imports": {
+          "app1": "http://localhost:4201/main.js",
+          "app2": "http://localhost:4202/main.js",
+          "dashboard": "http://localhost:4300/main.js",
+          "single-spa": "https://cdnjs.cloudflare.com/ajax/libs/single-spa/5.5.0/system/single-spa.min.js",
+          "single-spa-layout": "https://unpkg.com/single-spa-layout@1.0.0-beta.2/dist/system/single-spa-layout.min.js"
+        }
+      }
+    </script>
+
+    <!--
+      Packages we need for Single-Spa and SystemJS support
+
+      @Kyle Libbert -6/16/20
+    -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/single-spa/5.5.0/system/single-spa.min.js" as="script" crossorigin="anonymous" />
+    <script src='https://unpkg.com/core-js-bundle@3.1.4/minified.js'></script>
+    <script src="https://unpkg.com/zone.js"></script>
+    <script src="https://unpkg.com/import-map-overrides@1.15.1/dist/import-map-overrides.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/4.0.0/system.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/4.0.0/extras/amd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/4.0.0/extras/named-exports.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/4.0.0/extras/named-register.min.js"></script>
+
+    <!--
+      This template sets up the Single-Spa home page layout and routing. There are various ways to do this, but we'll us the 
+      single-spa-layout way in this prototype. It's important that th name specified in each application element match the name
+      of the micro-frontend. Microfrontends are treated as modules/components, not as independent applications.
+
+      @Kyle Libbert -6/16/20
+    -->
+    <template id="single-spa-layout">
+      <single-spa-router>
+        <nav class="topnav">
+          <application name="dashboard"></application>
+        </nav>
+        <div class="main-content">
+          <route path="app1">
+            <application name="app1"></application>
+          </route>
+          <route path="app2">
+            <application name="app2"></application>
+          </route>
+        </div>
+      </single-spa-router>
+    </template>
+  </head>
+  <body>
+    <!--
+      This is the beginning of the bootstrap process. We're telling Single-Spa what we want loaded (the template above) and registering
+      each of the Microfrontends by looping through the applications declared in the #single-spa-layout template above
+
+      @Kyle Libbert -6/16/20
+    -->
+    <script>
+      Promise.all([System.import('single-spa'), System.import('single-spa-layout')]).then(([singleSpa, singleSpaLayout]) => {
+        const { constructApplications, constructLayoutEngine, constructRoutes } = singleSpaLayout;
+        const { registerApplication, start } = singleSpa;
+
+        // Setup a single-spa application for each route declared in the single-spa-layout template and initialize the layout with single-spa
+        const routes = constructRoutes(document.querySelector('#single-spa-layout'));
+        const applications = constructApplications({
+          routes,
+          loadApp({ name }) {
+            return System.import(name);
+          },
+        });
+        const layoutEngine = constructLayoutEngine({ routes, applications });
+
+        // Now loop through the applications we just setup and register them with single-spa -- Kyle
+        applications.forEach(registerApplication);
+
+        // Go -- this loads everything we need to display the home page and nothing more. Clicking a link on the homepage causes the magic
+        //       needed to download the bits for the micro-frontend we're navigating too...lazy loading --Kyle
+        start();
+
+        // Added this to experiment with navigating directly to one of the micro-frontends on startup. This helps prove that we could
+        // potentially create an additinal Dashboard micro-frontend with the desires we need at LHI to navigat to the various applications.
+        // Every Single-Spa (Luigi as well) uses a side or top nav in their examples. -- Kyle
+        singleSpa.navigateToUrl("/app1");
+      });
+    </script>
+
+    <!--
+      This is a debug utility provided by the single-spa team. It's the yellow box in the lower left corner of the page. This should be
+      compiled out in production. We'd use this tool to avoid having to have every micro-frontend running on our development machines.
+      Instead the team responsible for, say CS WebApp, would only have that code/repo locally and point everything else, NAL, VACCN, etc to
+      the development servers. Otherwise you'll have to npm run start every application locally on your machine.
+    -->
+    <import-map-overrides-full></import-map-overrides-full>
+  </body>
+</html>
