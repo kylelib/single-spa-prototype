@@ -1,6 +1,14 @@
+<div *ngIf="showTitle === true" style="text-align:center">
+     <h1>
+       Welcome to {{ title }}-local!
+     </h1>
+</div>
+   
 <!-- This could be anything like a topside header, nav, title, etc --Kyle -->
-<navbar-primary-nav></navbar-primary-nav>
+<div style="position:fixed;top:25px;left:15px">
+     <navbar-primary-nav></navbar-primary-nav>
+</div>
 
 <!-- This router outlet isn't necessarily needed on the dashboard. It's here simply because we created
-     the Angular app specifying we wanted routing  -->
+     the Angular app specifying we wanted routing -kyle  -->
 <router-outlet></router-outlet>
